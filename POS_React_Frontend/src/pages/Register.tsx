@@ -25,7 +25,8 @@ const Register = () => {
       const registerData = {
         username: username.trim(),
         email: email.trim(),
-        password: password
+        password: password,
+        role: "USER"
       };
 
       const response = await api.post('/register', registerData);

@@ -21,6 +21,7 @@ public class AuthController {
 
     @PostMapping("register")
     public ResponseEntity<ApiResponse> registerUser(@Valid @RequestBody RegisterDTO registerDTO) {
+        System.out.println("Received registration request: " + registerDTO);
         return ResponseEntity.ok(new ApiResponse(200, "OK", authService.saveUser(registerDTO)));
     }
 
