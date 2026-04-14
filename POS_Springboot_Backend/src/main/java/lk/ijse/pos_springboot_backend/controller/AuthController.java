@@ -1,6 +1,7 @@
 package lk.ijse.pos_springboot_backend.controller;
 
 
+import jakarta.validation.Valid;
 import lk.ijse.pos_springboot_backend.dto.AuthDTO;
 import lk.ijse.pos_springboot_backend.dto.RegisterDTO;
 import lk.ijse.pos_springboot_backend.service.UserService;
@@ -19,7 +20,7 @@ public class AuthController {
     private final UserService authService;
 
     @PostMapping("register")
-    public ResponseEntity<ApiResponse> registerUser(@RequestBody RegisterDTO registerDTO) {
+    public ResponseEntity<ApiResponse> registerUser(@Valid @RequestBody RegisterDTO registerDTO) {
         return ResponseEntity.ok(new ApiResponse(200, "OK", authService.saveUser(registerDTO)));
     }
 

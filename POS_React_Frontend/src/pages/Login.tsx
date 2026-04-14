@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -7,19 +7,20 @@ const Login = () => {
     const [password, setPassword] = useState(''); 
     const navigate = useNavigate();
 
-    const handleLogin = async (e) =>{
+    const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        try{
-             // Backend එකේ AuthController එකට call කිරීම
+        try {
             const response = await api.post('/login', { username, password });
+            const accessToken = response?.data?.data?.accessToken;
 
-            if(response.status === 200){
-                 // Token එක localStorage එකේ දාගන්න (Auth වලට වැදගත්)
-                localStorage.setItem('token', response.data.token);
+            if (response.status === 200 && accessToken) {
+                localStorage.setItem('token', accessToken);
                 alert("Login Success!");
-                navigate('/dashboard'); // Dashboard එකට යවන්න
+                navigate('/dashboard');
+            } else {
+                alert("Login failed. Invalid server response.");
             }
-        }catch(error){
+        } catch (error) {
             alert("Invalid Credentials!");
             console.error(error);
         }
@@ -37,10 +38,10 @@ const Login = () => {
         </div>
 
         {/* Form Sections */}
-        <div className="space-y-6">
+        <form className="space-y-6" onSubmit={handleLogin}>
           {/* Email/Username Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email or Username</label>
             <input 
               type="text" 
               placeholder="example@mail.com"
@@ -68,10 +69,10 @@ const Login = () => {
           </div>
 
           {/* Login Button */}
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-300 shadow-md" onClick={handleLogin}>
+          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-300 shadow-md">
             Sign In
           </button>
-        </div>
+        </form>
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-600">

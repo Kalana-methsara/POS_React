@@ -31,11 +31,21 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findByEmail(registerDTO.getEmail()).isPresent()){
             throw new IllegalStateException("Email is already in use");
         }
+        String roleStr = registerDTO.getRole();
+        if (roleStr == null || roleStr.trim().isEmpty()) {
+            roleStr = "USER";
+        }
+        Role role;
+        try {
+            role = Role.valueOf(roleStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role: " + roleStr + ". Valid roles are: ADMIN, MANAGER, USER");
+        }
         User user = User.builder()
                 .username(registerDTO.getUsername())
                 .email(registerDTO.getEmail())
                 .password(passwordEncoder.encode(registerDTO.getPassword()))
-                .role(Role.valueOf(registerDTO.getRole()))
+                .role(role)
                 .build();
         userRepository.save(user);
         return "User registered successfully";
