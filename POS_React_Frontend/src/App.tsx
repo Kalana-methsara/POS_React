@@ -21,9 +21,9 @@ const App = () => {
         {/* Layout ekath ekka yana routes */}
         <Route element={<MainLayout />}>
           <Route path='/dashboard' element={<Dashboard />} />
+          <Route path='/order' element={<Order />} />
           <Route path="/customer" element={<Customer />} />
           <Route path='/item' element={<Item/>} />
-          <Route path='/order' element={<Order />} />
         </Route>
 
         {/* Nathi path ekak gahuwoth login ekata redirect karanna */}
