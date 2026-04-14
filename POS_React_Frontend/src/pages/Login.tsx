@@ -1,5 +1,6 @@
 import React,{useState} from 'react'
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -9,8 +10,12 @@ const Login = () => {
     const handleLogin = async (e) =>{
         e.preventDefault();
         try{
+             // Backend එකේ AuthController එකට call කිරීම
+            const response = await api.post('/login', { username, password });
 
-            if(true){
+            if(response.status === 200){
+                 // Token එක localStorage එකේ දාගන්න (Auth වලට වැදගත්)
+                localStorage.setItem('token', response.data.token);
                 alert("Login Success!");
                 navigate('/dashboard'); // Dashboard එකට යවන්න
             }
