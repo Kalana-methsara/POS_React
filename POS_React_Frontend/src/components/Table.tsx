@@ -1,6 +1,15 @@
-import React from 'react';
+type Column<T> = {
+  header: string;
+  key?: keyof T;
+  render?: (row: T) => React.ReactNode;
+};
 
-const Table = ({ columns, data }) => {
+type TableProps<T> = {
+  columns: Array<Column<T>>;
+  data: T[];
+};
+
+const Table = <T,>({ columns, data }: TableProps<T>) => {
   return (
     <div className="w-full overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
       <table className="w-full text-sm text-left text-gray-500">
@@ -19,7 +28,7 @@ const Table = ({ columns, data }) => {
               <tr key={rowIndex} className="hover:bg-blue-50/50 transition-colors">
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-gray-600">
-                    {col.render ? col.render(row) : row[col.key]}
+                    {col.render ? col.render(row) : col.key ? (row as any)[col.key] : null}
                   </td>
                 ))}
               </tr>
