@@ -69,7 +69,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public String deleteCustomer(String customerId) {
         if (!customerRepository.existsById(customerId)) {
-            throw new RuntimeException("Vehicle with ID " + customerId + " does not exist");
+            throw new RuntimeException("Customer with ID " + customerId + " does not exist");
         }
         customerRepository.deleteById(customerId);
         return "Customer deleted successfully";
