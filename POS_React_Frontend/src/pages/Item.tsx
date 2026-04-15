@@ -9,6 +9,13 @@ type Item = {
 };
 
 const UNIT_OPTIONS = ['KG', 'L', 'PCS', 'PACKET', 'BOTTLE'] as const;
+const UNIT_LABELS: Record<(typeof UNIT_OPTIONS)[number], string> = {
+  KG: 'Kg',
+  L: 'L',
+  PCS: 'Pcs',
+  PACKET: 'Pkt',
+  BOTTLE: 'Btl',
+};
 
 const ItemPage = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -142,7 +149,7 @@ const ItemPage = () => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Item Code (only for update)</label>
             <input
@@ -195,7 +202,7 @@ const ItemPage = () => {
               <option value="">Select unit</option>
               {UNIT_OPTIONS.map((unit) => (
                 <option key={unit} value={unit}>
-                  {unit}
+                  {UNIT_LABELS[unit]}
                 </option>
               ))}
             </select>
@@ -241,7 +248,7 @@ const ItemPage = () => {
                   <td className="px-6 py-4 text-sm">{item.description}</td>
                   <td className="px-6 py-4 text-sm">{item.price.toFixed(2)}</td>
                   <td className="px-6 py-4 text-sm">{item.quantity}</td>
-                  <td className="px-6 py-4 text-sm">{item.unit}</td>
+                  <td className="px-6 py-4 text-sm">{UNIT_LABELS[item.unit as keyof typeof UNIT_LABELS] ?? item.unit}</td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex gap-2">
                       <button onClick={() => startEdit(item)} className="text-blue-600 hover:underline">
