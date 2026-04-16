@@ -17,7 +17,7 @@ const UNIT_LABELS: Record<(typeof UNIT_OPTIONS)[number], string> = {
   BOTTLE: 'Btl',
 };
 
-const ItemPage = () => {
+const ItemPage = () => {  
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
