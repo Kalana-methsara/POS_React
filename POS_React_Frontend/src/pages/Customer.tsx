@@ -20,6 +20,7 @@ const CustomerPage = () => {
     points: 0,
   });
 
+
   const isEdit = useMemo(() => form.id.trim().length > 0, [form.id]);
 
   const authHeaders = useMemo(() => {
