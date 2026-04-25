@@ -126,39 +126,60 @@ const Order = () => {
     setCart((prev) => prev.filter((line) => line.id !== itemId));
   };
 
-  const placeOrder = () => {
-    if (!selectedCustomerId) {
-      alert('Please select a customer');
-      return;
-    }
-    if (cart.length === 0) {
-      alert('Cart is empty');
-      return;
+
+const placeOrder = async () => {
+  if (!selectedCustomerId || cart.length === 0) {
+    alert('Please select a customer and add items to cart');
+    return;
+  }
+
+  const orderRequest = {
+    customerId: selectedCustomerId,
+    orderDetails: cart.map((item) => ({
+      itemId: item.id,
+      quantity: item.qty,
+      unitPrice: item.price,
+    })),
+  };
+
+  try {
+    setLoading(true);
+    const response = await fetch('http://localhost:8080/api/v1/order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authHeaders ?? {}),
+      },
+      body: JSON.stringify(orderRequest),
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok) {
+      const msg = result?.message || 'Failed to place order';
+      throw new Error(msg);
     }
 
-    // Frontend finalize: reflect sold quantities in UI and reset order form.
-    setItems((prev) =>
-      prev.map((item) => {
-        const line = cart.find((c) => c.id === item.id);
-        if (!line) return item;
-        return { ...item, quantity: Math.max(0, item.quantity - line.qty) };
-      })
-    );
-
+    alert(result?.message || 'Order placed successfully!');
     setCart([]);
     setSelectedItemId('');
     setOrderQty(1);
-    setSelectedCustomerId('');
     setOrderSeq((prev) => prev + 1);
-    alert(`Order ${orderId} placed successfully`);
-  };
+    await fetchData();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Network error while placing order';
+    alert(message);
+    console.error('Place order failed:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Place New Order</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Column: Order & Customer Details */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
@@ -262,9 +283,9 @@ const Order = () => {
                   cart.map((line) => (
                     <tr key={line.id}>
                       <td className="px-6 py-3">{line.description}</td>
-                      <td className="px-6 py-3">${line.price.toFixed(2)}</td>
+                      <td className="px-6 py-3">Rs. {line.price.toFixed(2)}</td>
                       <td className="px-6 py-3">{line.qty}</td>
-                      <td className="px-6 py-3">${(line.price * line.qty).toFixed(2)}</td>
+                      <td className="px-6 py-3">Rs. {(line.price * line.qty).toFixed(2)}</td>
                       <td className="px-6 py-3">
                         <button
                           type="button"
@@ -279,16 +300,17 @@ const Order = () => {
                 )}
               </tbody>
             </table>
-            
+
             {/* Footer / Total */}
             <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-red-600">Total: ${grandTotal.toFixed(2)}</h3>
+              <h3 className="text-xl font-bold text-red-600">Total: Rs. {grandTotal.toFixed(2)}</h3>
               <button
                 type="button"
+                disabled={loading} // Prevent double-clicking
                 onClick={placeOrder}
-                className="px-8 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700"
+                className={`px-8 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
               >
-                Place Order
+                {loading ? 'Processing...' : 'Place Order'}
               </button>
             </div>
           </div>
