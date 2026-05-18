@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import Table from '../components/Table';
+import api from '../services/api';
+import axios from 'axios';
 
 type Customer = {
   id: string;
@@ -23,20 +25,12 @@ const CustomerPage = () => {
 
   const isEdit = useMemo(() => form.id.trim().length > 0, [form.id]);
 
-  const authHeaders = useMemo(() => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : undefined;
-  }, []);
-
   // 1. Fetching logic aligned with your Spring Boot ApiResponse
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/v1/customer/all', {
-        headers: authHeaders,
-      });
-      const json = await response.json();
-      setCustomers(Array.isArray(json?.data) ? json.data : []);
+      const response = await api.get('/customer/all');
+      setCustomers(Array.isArray(response.data?.data) ? response.data.data : []);
     } finally {
       setLoading(false);
     }
@@ -81,28 +75,19 @@ const CustomerPage = () => {
 
     setSubmitting(true);
     try {
-      const url = 'http://localhost:8080/api/v1/customer';
-      const response = await fetch(url, {
-        method: isEdit ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authHeaders ?? {}),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const json = await response.json().catch(() => null);
-      if (!response.ok) {
-        const msg = json?.message || 'Request failed';
-        throw new Error(msg);
-      }
+      await (isEdit ? api.put('/customer', payload) : api.post('/customer', payload));
 
       // Optimistic UI update (backend returns message string; list refresh is safest)
       await fetchCustomers();
       resetForm();
       alert(isEdit ? 'Customer Updated Successfully' : 'Customer Saved Successfully');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Save failed');
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string } | undefined)?.message || err.message
+        : err instanceof Error
+          ? err.message
+          : 'Save failed';
+      alert(message);
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -115,20 +100,17 @@ const CustomerPage = () => {
     if (!ok) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/customer/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        headers: authHeaders,
-      });
-      const json = await response.json().catch(() => null);
-      if (!response.ok) {
-        const msg = json?.message || 'Delete failed';
-        throw new Error(msg);
-      }
+      await api.delete(`/customer/${encodeURIComponent(id)}`);
       setCustomers((prev) => prev.filter((c) => c.id !== id));
       if (form.id === id) resetForm();
       alert('Customer Deleted Successfully');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Delete failed');
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string } | undefined)?.message || err.message
+        : err instanceof Error
+          ? err.message
+          : 'Delete failed';
+      alert(message);
       console.error(err);
     }
   };

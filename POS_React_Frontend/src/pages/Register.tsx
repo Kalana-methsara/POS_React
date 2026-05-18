@@ -29,7 +29,7 @@ const Register = () => {
         role: "USER"
       };
 
-      const response = await api.post('/register', registerData);
+      const response = await api.post('/auth/register', registerData);
 
       if (response.status === 200) {
         alert("Registration Successful!");

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../services/api';
 
 type Customer = {
   id: string;
@@ -23,24 +24,15 @@ const Dashboard = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const authHeaders = useMemo(() => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : undefined;
-  }, []);
-
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       const [customerRes, itemRes] = await Promise.all([
-        fetch('http://localhost:8080/api/v1/customer/all', { headers: authHeaders }),
-        fetch('http://localhost:8080/api/v1/item/all', { headers: authHeaders }),
+        api.get('/customer/all'),
+        api.get('/item/all'),
       ]);
-
-      const customerJson = await customerRes.json().catch(() => ({}));
-      const itemJson = await itemRes.json().catch(() => ({}));
-
-      setCustomers(Array.isArray(customerJson?.data) ? customerJson.data : []);
-      setItems(Array.isArray(itemJson?.data) ? itemJson.data : []);
+      setCustomers(Array.isArray(customerRes.data?.data) ? customerRes.data.data : []);
+      setItems(Array.isArray(itemRes.data?.data) ? itemRes.data.data : []);
     } catch (error) {
       console.error(error);
       alert('Failed to load dashboard data');

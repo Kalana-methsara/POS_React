@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, type FormEvent } from 'react';
+import api from '../services/api';
+import axios from 'axios';
 
 type Item = {
   id: string;
@@ -33,21 +35,12 @@ const ItemPage = () => {
   // form.id තියෙනවා නම් = edit mode
   const isEdit = useMemo(() => form.id.trim().length > 0, [form.id]);
 
-  // localStorage එකෙන් token ගන්නවා
-  const authHeaders = useMemo(() => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : undefined;
-  }, []);
-
   // ── Fetch ──────────────────────────────────────────
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/v1/item/all', {
-        headers: authHeaders,
-      });
-      const json = await response.json();
-      setItems(Array.isArray(json?.data) ? json.data : []);
+      const response = await api.get('/item/all');
+      setItems(Array.isArray(response.data?.data) ? response.data.data : []);
     } finally {
       setLoading(false);
     }
@@ -94,20 +87,18 @@ const ItemPage = () => {
 
     setSubmitting(true);
     try {
-      const response = await fetch('http://localhost:8080/api/v1/item', {
-        method: isEdit ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', ...(authHeaders ?? {}) },
-        body: JSON.stringify(payload),
-      });
-
-      const json = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(json?.message || 'Request failed');
+      await (isEdit ? api.put('/item', payload) : api.post('/item', payload));
 
       await fetchItems();
       resetForm();
       alert(isEdit ? 'Item Updated Successfully' : 'Item Saved Successfully');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Save failed');
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string } | undefined)?.message || err.message
+        : err instanceof Error
+          ? err.message
+          : 'Save failed';
+      alert(message);
     } finally {
       setSubmitting(false);
     }
@@ -118,20 +109,19 @@ const ItemPage = () => {
     if (!confirm(`Delete item ${id}?`)) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/item/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        headers: authHeaders,
-      });
-
-      const json = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(json?.message || 'Delete failed');
+      await api.delete(`/item/${encodeURIComponent(id)}`);
 
       // State එකෙන් deleted item remove කරනවා
       setItems((prev) => prev.filter((i) => i.id !== id));
       if (form.id === id) resetForm();
       alert('Item Deleted Successfully');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Delete failed');
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string } | undefined)?.message || err.message
+        : err instanceof Error
+          ? err.message
+          : 'Delete failed';
+      alert(message);
     }
   };
 

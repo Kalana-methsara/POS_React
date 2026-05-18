@@ -28,7 +28,7 @@ const Table = <T,>({ columns, data }: TableProps<T>) => {
               <tr key={rowIndex} className="hover:bg-blue-50/50 transition-colors">
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-gray-600">
-                    {col.render ? col.render(row) : col.key ? (row as any)[col.key] : null}
+                    {col.render ? col.render(row) : col.key ? (row as never)[col.key] : null}
                   </td>
                 ))}
               </tr>

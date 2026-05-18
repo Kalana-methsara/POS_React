@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import api from '../services/api';
+import axios from 'axios';
 
 type Customer = {
   id: string;
@@ -35,11 +37,6 @@ const Order = () => {
   const [orderQty, setOrderQty] = useState<number>(1);
   const [orderSeq, setOrderSeq] = useState(1);
 
-  const authHeaders = useMemo(() => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : undefined;
-  }, []);
-
   const orderId = useMemo(() => `ORD-${String(orderSeq).padStart(3, '0')}`, [orderSeq]);
   const selectedItem = useMemo(
     () => items.find((item) => item.id === selectedItemId) ?? null,
@@ -54,15 +51,11 @@ const Order = () => {
     setLoading(true);
     try {
       const [customerRes, itemRes] = await Promise.all([
-        fetch('http://localhost:8080/api/v1/customer/all', { headers: authHeaders }),
-        fetch('http://localhost:8080/api/v1/item/all', { headers: authHeaders }),
+        api.get('/customer/all'),
+        api.get('/item/all'),
       ]);
-
-      const customerJson = await customerRes.json().catch(() => ({}));
-      const itemJson = await itemRes.json().catch(() => ({}));
-
-      setCustomers(Array.isArray(customerJson?.data) ? customerJson.data : []);
-      setItems(Array.isArray(itemJson?.data) ? itemJson.data : []);
+      setCustomers(Array.isArray(customerRes.data?.data) ? customerRes.data.data : []);
+      setItems(Array.isArray(itemRes.data?.data) ? itemRes.data.data : []);
     } catch (error) {
       console.error(error);
       alert('Failed to load customers or items.');
@@ -144,29 +137,19 @@ const placeOrder = async () => {
 
   try {
     setLoading(true);
-    const response = await fetch('http://localhost:8080/api/v1/order', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authHeaders ?? {}),
-      },
-      body: JSON.stringify(orderRequest),
-    });
-
-    const result = await response.json().catch(() => null);
-    if (!response.ok) {
-      const msg = result?.message || 'Failed to place order';
-      throw new Error(msg);
-    }
-
-    alert(result?.message || 'Order placed successfully!');
+    const response = await api.post('/order', orderRequest);
+    alert(response.data?.message || 'Order placed successfully!');
     setCart([]);
     setSelectedItemId('');
     setOrderQty(1);
     setOrderSeq((prev) => prev + 1);
     await fetchData();
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Network error while placing order';
+    const message = axios.isAxiosError(error)
+      ? (error.response?.data as { message?: string } | undefined)?.message || error.message
+      : error instanceof Error
+        ? error.message
+        : 'Network error while placing order';
     alert(message);
     console.error('Place order failed:', error);
   } finally {

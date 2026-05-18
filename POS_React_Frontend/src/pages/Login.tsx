@@ -10,7 +10,7 @@ const Login = () => {
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            const response = await api.post('/login', { username, password });
+            const response = await api.post('/auth/login', { username, password });
             const accessToken = response?.data?.data?.accessToken;
 
             if (response.status === 200 && accessToken) {

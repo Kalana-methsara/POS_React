@@ -1,11 +1,18 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Match this with your Spring Boot server port (usually 8080)
-  baseURL: 'http://localhost:8080/api/v1/auth', 
+  baseURL: 'http://localhost:8080/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default api;
